@@ -1,0 +1,125 @@
+---
+title: "Reproducible Data Analysis Project"
+author: "sreekar"
+date: "14/04/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## 1. Introduction
+**text**
+*text*
+# text
+`text`
+[text](text)
+### a) Description of scenario
+
+Chicago Bulls is a Basketball team which participates in the NBA (National Basketball Association) seasons. General manager of Chicago Bulls has approached me, i.e. the author of this project; to find 5 best players for 5 positions, one player for each position for the next NBA season 2019-20.
+
+### b) Background information
+
+It is better to get some idea of the basketball game. Normally, a team has 5 players and these players are assigned to 5 positions. The basketball positions are assigned a number as under:
+
+1. Point Guard [PG]
+2. Shooting Guard [SG]
+3. Small Forward [SF]
+4. Power Forward [PF]
+5. Center [C]
+
+### c) Aim of project 
+
+The aim of this project is to find out the 5 best players, one for each position for 
+Chicago Bulls for the next session 2019-20.
+
+### d) Justification and importance 
+
+The budget of Chicago Bulls for player contracts next season is $118 million. If this project is able to provide an accurate prediction of the 5 player who are value for money, then the Chicago Bulls will be able to get good players in reasonable amount. Besides that the recommendation and selection of the players shall be free from bias as it shall be data based. 
+
+## 2. Reading and cleaning the raw data
+
+### Date Description
+
+The data set consists of 5 csv files. The data description is can be seen by clicking below link: <https://github.com/Sreekardeshamoni/Assessment-4/blob/main/Data%20Description.pdf>
+
+### Loading tidyverse library and reading the data
+The csv files are saved in data frames tibbles of readr package. 
+```{r cars}
+library(tidyverse)
+df1 = read_csv("data/raw/2018-19_nba_player-statistics.csv")
+df2 = read_csv("data/raw/2018-19_nba_player-salaries.csv")
+df3 = read_csv("data/raw/2019-20_nba_team-payroll.csv")
+df4 = read_csv("data/raw/2018-19_nba_team-statistics_1.csv")
+df5 = read_csv("data/raw/2018-19_nba_team-statistics_2.csv")
+```
+Now, its time to have a look at data structure.
+```{r}
+str(df1)
+str(df2)
+str(df3)
+str(df4)
+str(df5)
+```
+
+## 3. Exploratory analysis
+
+### Checking missing values df1
+```{r}
+sum(is.na(df1))
+which(is.na(df1), arr.ind = TRUE)
+naniar::vis_miss(df1)
+```
+
+There are missing values for FG%, 3P%, 2P%, eFG%, and FT%. These are calculated field in the raw data itself, and where the denominator and/or numerator is zero, these fields becomes NA. 
+However, it is understood that these are values where field goal, 2 Pointer and 3 Pointer was not done by the player. Hence, it is a good idea to replace these values by 0%.
+If we check the player_name variable, we find that a total of 86 players have played for more than 1 team in the season. 
+mydf1 = df1 %>% group_by(player_name) %>% summarise(num_of_teams =n()) %>% filter(num_of_teams>1)
+
+### Checking missing values df2
+```{r}
+sum(is.na(df2))
+which(is.na(df2), arr.ind = TRUE)
+naniar::vis_miss(df2)
+```
+
+### Checking missing values df3
+```{r}
+sum(is.na(df3))
+which(is.na(df3), arr.ind = TRUE)
+naniar::vis_miss(df3)
+```
+
+### Checking missing values df4
+```{r}
+sum(is.na(df4))
+which(is.na(df4), arr.ind = TRUE)
+naniar::vis_miss(df4)
+```
+
+df4 has last 3 columns ...23, ...24, ...25 and these appears to be bogus columns and there is need to deleted these columns. 
+The tidy df4 shall be as under:
+```{r}
+df4 = select(df4,-c(...23:...25))
+df4
+```
+
+Now, the bogus columns are gone. 
+This can be crossed checked:
+```{r}
+naniar::vis_miss(df4)
+```
+
+
+### Checking missing values df5
+```{r}
+sum(is.na(df5))
+which(is.na(df5), arr.ind = TRUE)
+naniar::vis_miss(df5)
+```
+
+## 4. Data modelling and results
+## 5. Player recommendations
+## 6. Summary
+## 7. Reference List
+
