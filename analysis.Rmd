@@ -2,18 +2,26 @@
 title: "Reproducible Data Analysis Project"
 author: "sreekar"
 date: "14/04/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ## 1. Introduction
-**text**
-*text*
-# text
-`text`
-[text](text)
+
+Every team owner wish to have top players only. But, its also a business and we need to "purcahse!" only value for money players for maximum utilization of money. The report finds top 5 value for money players with the help of linear regression analysis. 
+
+The top 5 players are:
+
+```{r echo=FALSE}
+final_players<-data.frame(POSITION=c('PG','SG','SF','PF','C',""),PLAYER=c('D’Angelo Russell','Devin Booker','Brandon Ingram','John Collins','Karl-Anthony Towns','TOTAL'),
+             SALARYmillions=c(7.01,3.31,5.75,2.29,7.83,26.19))
+final_players
+```
+
 ### a) Description of scenario
 
 Chicago Bulls is a Basketball team which participates in the NBA (National Basketball Association) seasons. General manager of Chicago Bulls has approached me, i.e. the author of this project; to find 5 best players for 5 positions, one player for each position for the next NBA season 2019-20.
@@ -31,11 +39,14 @@ It is better to get some idea of the basketball game. Normally, a team has 5 pla
 ### c) Aim of project 
 
 The aim of this project is to find out the 5 best players, one for each position for 
-Chicago Bulls for the next session 2019-20.
+Chicago Bulls for the next session 2019-20. It may be noted that we are not going to just pick the top 5 players. We need to consider the budget and need to develop a model which identifies the undervalued players. 
 
 ### d) Justification and importance 
 
 The budget of Chicago Bulls for player contracts next season is $118 million. If this project is able to provide an accurate prediction of the 5 player who are value for money, then the Chicago Bulls will be able to get good players in reasonable amount. Besides that the recommendation and selection of the players shall be free from bias as it shall be data based. 
+Linear regression shall help in finding the undervalued players. We need to find the players with the ability to score high points but getting a lower to moderate salary. Thus, at first we shall develop a model to predict the players ability to score points and thereafter compare this with players salary and select the value for money players of different positions with help of this framework.
+As stated earlier that the top players are very costly, hence it makes sense to develop a metric to value players based on that metric to their relative contribution to score points. 
+The confidence interval limits are positive. i.e. it is not that one limit is negative and one limit is positive. 
 
 ## 2. Reading and cleaning the raw data
 
@@ -44,82 +55,360 @@ The budget of Chicago Bulls for player contracts next season is $118 million. If
 The data set consists of 5 csv files. The data description is can be seen by clicking below link: <https://github.com/Sreekardeshamoni/Assessment-4/blob/main/Data%20Description.pdf>
 
 ### Loading tidyverse library and reading the data
+
 The csv files are saved in data frames tibbles of readr package. 
 ```{r cars}
 library(tidyverse)
-df1 = read_csv("data/raw/2018-19_nba_player-statistics.csv")
-df2 = read_csv("data/raw/2018-19_nba_player-salaries.csv")
-df3 = read_csv("data/raw/2019-20_nba_team-payroll.csv")
-df4 = read_csv("data/raw/2018-19_nba_team-statistics_1.csv")
-df5 = read_csv("data/raw/2018-19_nba_team-statistics_2.csv")
+library(broom)
+player_stat = read_csv("data/raw/2018-19_nba_player-statistics.csv")
+player_salary = read_csv("data/raw/2018-19_nba_player-salaries.csv")
+team_payroll = read_csv("data/raw/2019-20_nba_team-payroll.csv")
+team_stat_1 = read_csv("data/raw/2018-19_nba_team-statistics_1.csv")
+team_stat_2 = read_csv("data/raw/2018-19_nba_team-statistics_2.csv")
 ```
 Now, its time to have a look at data structure.
 ```{r}
-str(df1)
-str(df2)
-str(df3)
-str(df4)
-str(df5)
+str(player_stat)
+str(player_salary)
+str(team_payroll)
+str(team_stat_1)
+str(team_stat_2)
+```
+R can manage the "illegal" variable names by surrounding the variable name by ``, however, as a best practice it makes sense to rename the variables.
+```{r}
+player_stat <-rename(player_stat,
+                    FGp = `FG%`, 
+                    x3P = `3P`, 
+                    x3PA = `3PA`, 
+                    x3Pp = `3P%`, 
+                    x2P = `2P`, 
+                    x2PA = `2PA`, 
+                    x2Pp = `2P%`, 
+                    eFGp = `eFG%`, 
+                    FTp = `FT%`)
+
+team_stat_1 <-rename(team_stat_1, 
+                           x3PAr = `3PAr`, 
+                           TSp = `TS%`, 
+                           eFGp = `eFG%`, 
+                           TOVp = `TOV%`, 
+                           ORBp = `ORB%`, 
+                           FTpFGA = `FT/FGA`, 
+                           DRBp = `DRB%`)
+
+team_stat_2 <-rename(team_stat_2,
+                           FGp = `FG%`, 
+                           x3P = `3P`, 
+                           x3PA = `3PA`, 
+                           x3Pp = `3P%`, 
+                           x2P = `2P`, 
+                           x2PA = `2PA`, 
+                           x2Pp = `2P%`,
+                           FTp = `FT%`)
 ```
 
 ## 3. Exploratory analysis
 
-### Checking missing values df1
+### Checking missing values player_stat
+At first need to check the missing values.
 ```{r}
-sum(is.na(df1))
-which(is.na(df1), arr.ind = TRUE)
-naniar::vis_miss(df1)
+sum(is.na(player_stat))
+which(is.na(player_stat), arr.ind = TRUE)
+naniar::vis_miss(player_stat)
 ```
 
-There are missing values for FG%, 3P%, 2P%, eFG%, and FT%. These are calculated field in the raw data itself, and where the denominator and/or numerator is zero, these fields becomes NA. 
+There are missing values for FGp, x3Pp, x2Pp, eFGp, and FTp. These are calculated field in the raw data itself, and where the denominator and/or numerator is zero, these fields becomes NA. 
 However, it is understood that these are values where field goal, 2 Pointer and 3 Pointer was not done by the player. Hence, it is a good idea to replace these values by 0%.
+```{r}
+player_stat <- replace_na(player_stat, list(FGp = 0,x3Pp = 0,x2Pp = 0, eFGp = 0, FTp = 0))
+sum(is.na(player_stat))
+naniar::vis_miss(player_stat)
+```
+
 If we check the player_name variable, we find that a total of 86 players have played for more than 1 team in the season. 
 mydf1 = df1 %>% group_by(player_name) %>% summarise(num_of_teams =n()) %>% filter(num_of_teams>1)
 
-### Checking missing values df2
+### Checking missing values player_salary
 ```{r}
-sum(is.na(df2))
-which(is.na(df2), arr.ind = TRUE)
-naniar::vis_miss(df2)
+sum(is.na(player_salary))
+which(is.na(player_salary), arr.ind = TRUE)
+naniar::vis_miss(player_salary)
 ```
 
-### Checking missing values df3
+### Checking missing values team_payroll
 ```{r}
-sum(is.na(df3))
-which(is.na(df3), arr.ind = TRUE)
-naniar::vis_miss(df3)
+sum(is.na(team_payroll))
+which(is.na(team_payroll), arr.ind = TRUE)
+naniar::vis_miss(team_payroll)
 ```
 
-### Checking missing values df4
+### Checking missing values team_stat_1
 ```{r}
-sum(is.na(df4))
-which(is.na(df4), arr.ind = TRUE)
-naniar::vis_miss(df4)
+sum(is.na(team_stat_1))
+which(is.na(team_stat_1), arr.ind = TRUE)
+naniar::vis_miss(team_stat_1)
 ```
 
-df4 has last 3 columns ...23, ...24, ...25 and these appears to be bogus columns and there is need to deleted these columns. 
-The tidy df4 shall be as under:
+team_stat_1 has last 3 columns ...23, ...24, ...25 and these appears to be bogus columns and there is need to deleted these columns. 
+The tidy team_stat_1 shall be as under:
 ```{r}
-df4 = select(df4,-c(...23:...25))
-df4
+team_stat_1 = select(team_stat_1,-c(...23:...25))
+team_stat_1
 ```
 
 Now, the bogus columns are gone. 
 This can be crossed checked:
 ```{r}
-naniar::vis_miss(df4)
+naniar::vis_miss(team_stat_1)
 ```
 
 
-### Checking missing values df5
+### Checking missing values team_stat_2
 ```{r}
-sum(is.na(df5))
-which(is.na(df5), arr.ind = TRUE)
-naniar::vis_miss(df5)
+sum(is.na(team_stat_2))
+which(is.na(team_stat_2), arr.ind = TRUE)
+naniar::vis_miss(team_stat_2)
 ```
+
+We can combine team_stat_1 and team_stat_2.
+```{r}
+team_stat <- left_join(x = team_stat_1[-1], y = team_stat_2[-1], by = "Team") #don't need cols 1 of Ranks
+```
+
+
+### Other aspects
+Interesting fact is that there are 30 teams, but in the player statistics table, there are 31 teams.We find that extra team is TOT which represents the total of all the instances matrices,where a player played from 2 or more teams in the season. We need the total of performance done by such players for the teams they were playing. This can be get with row where team name is "TOT". Thus, fur such players,we can keep only the row having "TOT" as team.
+```{r}
+player_stat <- player_stat %>% group_by(player_name) %>% add_tally() %>% filter(n==1 | n>1 & Tm == "TOT")
+```
+Earlier, the player_stat has 730 rows, however, it has 530 rows.But one more issue is remaining.We find that there are a number of players who have played at different positions. However, we need to consider only a single position for these players. The best approach is to select the position for which the player has played most of the games. Luckily, we find that the raw data file, has already done this in some way. For example..
+We just need to extract the characters before -, in the Pos column. 
+```{r}
+player_stat <- player_stat %>% separate(col = Pos, into = "Pos")
+```
+
+Also, some of the players have played a lower number of games. In fact, there are 20 players who have played only 1 game. We need to create a sort of cutoff and minimum 10 games cutoff is a reasonable cut off. 
+```{r}
+player_stat <- player_stat %>% filter(G>=10)
+```
+
+
+There are 576 players in players salary table, however, there are only 530 unique players in the player statistics table. It means that some of the players did not played in NBA or the data for them is not available in player statistics. However, this fact is considered unimportant for the given project analysis. 
+We can combine player_salary and player_stat
+```{r}
+player_stat <- inner_join(x = player_stat, y = player_salary, by = "player_name")
+```
+
 
 ## 4. Data modelling and results
-## 5. Player recommendations
-## 6. Summary
-## 7. Reference List
+### Valuing Players
+Now, we will create a metric to value the players based upon certain factors/variables. This metric can be called exp_PTS_per_game. We shall then identify the undervalue players with the help of this metric. 
+For this, we need to find some key metrics for our analysis. Some of the metrics to be used are below:
+FG Field Goals
+TRB Total Rebounds  
+AST Assists
+STL Steals
+BLK Blocks
+TOV Turnovers
 
+However, as number of games played by players are different, it makes sense to normalize these metrics per game. 
+```{r}
+normalised_team_stat <- team_stat %>% mutate(
+  PTS_per_game = PTS / G,
+  FG_per_game = FG / G,
+  TRB_per_game = TRB / G,
+  AST_per_game = AST / G,
+  STL_per_game = STL / G,
+  BLK_per_game = BLK / G,
+  TOV_per_game = TOV / G)
+```
+
+Now, we create a multiple regression model for exp_PTS_per_game. 
+```{r}
+fit <- lm(PTS_per_game ~
+  FG_per_game + TRB_per_game  + AST_per_game  + STL_per_game  + BLK_per_game  + TOV_per_game, data = normalised_team_stat)
+tidy(fit, conf.int = TRUE)
+```
+### Model Testing
+
+```{r}
+normalised_team_stat <- mutate(normalised_team_stat,exp_PTS_per_game=predict(fit,newdata=normalised_team_stat))
+```
+
+graph
+```{r}
+ggplot(normalised_team_stat, aes(exp_PTS_per_game, PTS_per_game, label = Team)) +
+geom_point(colour = "dodgerblue") +
+geom_text(nudge_x = 0.1, cex = 3) +
+geom_abline(linetype = "dashed", colour = "magenta")
+```
+
+graph 
+```{r}
+ggplot(normalised_team_stat, aes(x = W, y = exp_PTS_per_game, label = Team)) +
+geom_point(colour = "dodgerblue") +
+geom_text(nudge_x = 2, cex = 3)
+```
+
+### Player Metric
+
+At first we normalize the player_stat
+```{r}
+normalised_player_stat <- player_stat %>% mutate(
+  PTS_per_game = PTS / G,
+  FG_per_game = FG / G,
+  TRB_per_game = TRB / G,
+  AST_per_game = AST / G,
+  STL_per_game = STL / G,
+  BLK_per_game = BLK / G,
+  TOV_per_game = TOV / G)
+str(normalised_player_stat)
+```
+
+Next, step is to calculate player specific expected points. 
+
+```{r}
+fit <- lm(PTS_per_game ~
+  FG_per_game + TRB_per_game  + AST_per_game  + STL_per_game  + BLK_per_game  + TOV_per_game, data = normalised_player_stat)
+tidy(fit, conf.int = TRUE)
+
+normalised_player_stat <- normalised_player_stat%>% ungroup() %>% mutate(exp_PTS = predict(fit,newdata = normalised_player_stat))
+```
+
+histogram
+
+```{r}
+normalised_player_stat %>%
+ggplot(aes(x = exp_PTS)) +
+geom_histogram(binwidth = 0.5, colour = "black", fill = "dodgerblue")
+```
+
+
+## 5. Player recommendations
+
+### Value for money player for Point Guard Position 
+
+![D'Angelo Russell](img/pg.png)
+
+```{r}
+player_PG <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "PG")%>%
+arrange(desc(exp_PTS), salary) %>%
+top_n(10)
+player_PG
+```
+
+
+```{r}
+player_PG %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
+geom_point(colour = "dodgerblue") +
+geom_text(nudge_x = 2, cex = 3) +
+xlab("Salary (Millions)")
+```
+
+We can see that D'Angelo Russell has exp_PTS of 22.8 at just 7.01 millions. So, he is our player for point guard position. 
+
+### Value for money player for Shooting Guard Position 
+
+![Devin Booker](img/sg.png)
+
+```{r}
+player_SG <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "SG")%>%
+arrange(desc(exp_PTS), salary) %>%
+top_n(10)
+player_SG
+```
+
+
+```{r}
+player_SG %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
+geom_point(colour = "dodgerblue") +
+geom_text(nudge_x = 2, cex = 3) +
+xlab("Salary (Millions)")
+```
+
+We can see that Devin Booker has exp_PTS of 26.2 just at 3.31 millions. So, he is our player for shooting guard position.  
+ 
+
+### Value for money player for Small Forward Position
+
+![Brandon Ingram](img/sf.png)
+
+```{r}
+player_SF <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "SF")%>%
+arrange(desc(exp_PTS), salary) %>%
+top_n(10)
+player_SF
+```
+
+
+```{r}
+player_SF %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
+geom_point(colour = "dodgerblue") +
+geom_text(nudge_x = 2, cex = 3) +
+xlab("Salary (Millions)")
+```
+
+We can see that Brandon Ingram has exp_PTS of 19.3 just at 5.75 millions. So, he is our player for small forward position.  
+
+### Value for money player for Power Forward Position 
+
+![John Collins](img/pf.png)
+
+```{r}
+player_PF <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "PF")%>%
+arrange(desc(exp_PTS), salary) %>%
+top_n(10)
+player_PF
+```
+
+
+```{r}
+player_PF %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
+geom_point(colour = "dodgerblue") +
+geom_text(nudge_x = 2, cex = 3) +
+xlab("Salary (Millions)")
+```
+
+We can see that John Collins has exp_PTS of 20.3 at just 2.29 millions. So, he is our player for power forward position.  
+
+### Value for money player for Center Position 
+
+![Karl-Anthony Towns](img/c.png)
+
+```{r}
+player_C <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "C")%>%
+arrange(desc(exp_PTS), salary) %>%
+top_n(10)
+player_C
+```
+
+
+```{r}
+player_C %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
+geom_point(colour = "dodgerblue") +
+geom_text(nudge_x = 2, cex = 3) +
+xlab("Salary (Millions)")
+```
+
+We can see that Karl-Anthony Towns has exp_PTS of 23.7 at just 7.83 millions. So, he is our player for center position.  
+
+## 6. Summary
+
+```{r}
+final_players<-data.frame(POSITION=c('PG','SG','SF','PF','C',""),PLAYER=c('D’Angelo Russell','Devin Booker','Brandon Ingram','John Collins','Karl-Anthony Towns','TOTAL'),
+             SALARYmillions=c(7.01,3.31,5.75,2.29,7.83,26.19))
+final_players
+```
+
+We are able to find top 5 value for money players in just 26.19 millions. We are left with ample money to make remaining team. 
+
+## 7. Reference List
+1. https://www.espn.in/nba/
+
+2. https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf
+
+3. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3661887/
+
+4. https://www.researchgate.net/publication/233682287_Performance_indicators_that_distinguish_winning_and_losing_teams_in_basketball
+
+5. https://www.nba.com/players
