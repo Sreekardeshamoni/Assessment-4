@@ -3,16 +3,27 @@ title: "Reproducible Data Analysis Project"
 author: "sreekar"
 date: "14/04/2022"
 output:
+  
+  
+  prettydoc::html_pretty:
+     theme: material
+     toc: TRUE
   pdf_document: default
+  fig_caption: yes
   html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+<center>
+![Since 1966](img/cb.png){width=400px}
+</center>
+
 ## 1. Introduction
 
-Every team owner wish to have top players only. But, its also a business and we need to "purcahse!" only value for money players for maximum utilization of money. The report finds top 5 value for money players with the help of linear regression analysis. 
+Every team owner wish to have top players only. But, its also a business and we need to "purchase!" only value for money players for maximum utilization of money. The report finds top 5 value for money players with the help of linear regression analysis performed with help of R packages(1). 
 
 The top 5 players are:
 
@@ -24,17 +35,31 @@ final_players
 
 ### a) Description of scenario
 
-Chicago Bulls is a Basketball team which participates in the NBA (National Basketball Association) seasons. General manager of Chicago Bulls has approached me, i.e. the author of this project; to find 5 best players for 5 positions, one player for each position for the next NBA season 2019-20.
+Chicago Bulls is a Basketball team which participates in the NBA (National Basketball Association) seasons(2). General manager of Chicago Bulls has approached me, i.e. the author of this project; to find 5 best players for 5 positions, one player for each position for the next NBA season 2019-20.
 
 ### b) Background information
 
 It is better to get some idea of the basketball game. Normally, a team has 5 players and these players are assigned to 5 positions. The basketball positions are assigned a number as under:
 
 1. Point Guard [PG]
+
+Main task of points guard is to score points. Besides that he should help in assists and limiting turnovers.
+
 2. Shooting Guard [SG]
+
+Main task of shooting guard is to score points. Besides that he should help in assists and limiting turnovers.
+
 3. Small Forward [SF]
+
+Main task of small forward is to score points. Besides that he should help in assists and limiting turnovers. 
+
 4. Power Forward [PF]
+
+Main task of power forward is to score points. Besides that he should help in rebounds and limiting turnovers.
+
 5. Center [C]
+
+Rebounds, Blocking and limiting turnover are the key metrics for center. 
 
 ### c) Aim of project 
 
@@ -202,20 +227,30 @@ player_stat <- inner_join(x = player_stat, y = player_salary, by = "player_name"
 
 ## 4. Data modelling and results
 ### Valuing Players
-Now, we will create a metric to value the players based upon certain factors/variables. This metric can be called exp_PTS_per_game. We shall then identify the undervalue players with the help of this metric. 
-For this, we need to find some key metrics for our analysis. Some of the metrics to be used are below:
-FG Field Goals
+The main purpose of any basketball game is that the team wins that game. However, wining of games cannot alone a factor to select the players. In fact only team wins the matches and a player alone cannot have a credit to win the game and basket ball is a team game. Thus, we need find some metrics which includes several indirect measures to rate the players. 
+A player alone may not win the game but it can score points. Points win the games and and after all players are recruited to  score points. 
+Now, we will create a metric to value the players based upon certain factors/variables. This metric can be called exp_PTS_per_game. We shall then identify the undervalue players with the help of this metric(3). 
+
+In order to predict the exp_PTS_per_game, we need to find some key variables for our analysis(4). There after we will perform a multiple linear regression model. 
+
+Some of the metrics to be used are below:
+
+
 TRB Total Rebounds  
+
 AST Assists
+
 STL Steals
+
 BLK Blocks
+
 TOV Turnovers
 
 However, as number of games played by players are different, it makes sense to normalize these metrics per game. 
+
 ```{r}
 normalised_team_stat <- team_stat %>% mutate(
   PTS_per_game = PTS / G,
-  FG_per_game = FG / G,
   TRB_per_game = TRB / G,
   AST_per_game = AST / G,
   STL_per_game = STL / G,
@@ -223,13 +258,131 @@ normalised_team_stat <- team_stat %>% mutate(
   TOV_per_game = TOV / G)
 ```
 
+Checking that PTS_per_game is correlated with Wins or not...
+```{r}
+ggplot(normalised_team_stat, aes(x = PTS_per_game, y = W))+ 
+geom_point(alpha = 0.5, colour = "red")+ 
+geom_smooth(method = "lm")
+
+#checking correlation between Win and Points_per_game
+cor(x = normalised_team_stat$PTS_per_game, y = normalised_team_stat$W, method = "pearson")
+```
+
+Thus, we can see that Points_per_game has a positive correlation with Win. 
+
+Before developing a multiple regression model for PTS_per_game we should see confirm that dependent variable PTS_per_game and independent variables are related. 
+
+```{r}
+ggplot(normalised_team_stat, aes(x = TRB_per_game, y = PTS_per_game))+ 
+geom_point(alpha = 0.5, colour = "red") + 
+geom_smooth(method = "lm")
+ggplot(normalised_team_stat, aes(x = AST_per_game, y = PTS_per_game))+
+geom_point(alpha = 0.5, colour = "red") + 
+geom_smooth(method = "lm")
+ggplot(normalised_team_stat, aes(x = STL_per_game, y = PTS_per_game))+
+geom_point(alpha = 0.5, colour = "red") + 
+geom_smooth(method = "lm")
+ggplot(normalised_team_stat, aes(x = BLK_per_game, y = PTS_per_game))+
+geom_point(alpha = 0.5, colour = "red") + 
+geom_smooth(method = "lm")
+ggplot(normalised_team_stat, aes(x = TOV_per_game, y = PTS_per_game))+
+geom_point(alpha = 0.5, colour = "red") + 
+geom_smooth(method = "lm")
+```
+
+We can see that variables has a linear relations. 
 Now, we create a multiple regression model for exp_PTS_per_game. 
+
 ```{r}
 fit <- lm(PTS_per_game ~
-  FG_per_game + TRB_per_game  + AST_per_game  + STL_per_game  + BLK_per_game  + TOV_per_game, data = normalised_team_stat)
+  TRB_per_game  + AST_per_game  + STL_per_game  + BLK_per_game  + TOV_per_game, data = normalised_team_stat)
 tidy(fit, conf.int = TRUE)
 ```
-### Model Testing
+
+**Our Model says:**
+
+**$expPTSpergame = RBpergame  + ASTpergame  + STLpergame  + BLKpergame  + TOVpergame$**
+
+### Checking Multiple Linear Regression Assumptions 
+
+**1. The dependent variable should be continuous.**
+
+Yes, The Points_per_game is a continuous variable. 
+
+**2. The independent variables should be continuous**
+
+Yes, Each of the independent variables is continuous. 
+
+**3. Independence of observations**
+
+```{r}
+car::durbinWatsonTest(fit)
+```
+
+The DW statistics value of 2 indicates that there is no correlation at all. We can see that in our model the value is almost 2. This indicates there is almost no correlation at all among the residuals and that we have independence of observations. 
+
+**4. Linearity**
+
+The dependent variable should have a linear relationship with each independent variable. 
+
+```{r}
+car::avPlots(fit)
+```
+
+We can see a linear relationship, Though it is weak in case of BLK-per_game. 
+
+**5. Outliers**
+
+```{r}
+#Check the data for outliers.
+std_res <- rstandard(fit)
+points <- 1:length(std_res)
+ggplot(data = NULL, aes(x = points, y = std_res)) +
+geom_point(colour = "black") +
+ylim(c(-4, 4)) +
+geom_hline(yintercept = c(-3, 3), colour = "black", linetype = "dashed")+
+theme(panel.background = element_rect(fill = 'red'))
+```
+There are some outliers, but most of the points are within 3 standard deviation. 
+
+**6. Homoscedasticity**
+
+```{r}
+res<- residuals(fit)
+fitted <- fit %>%  predict()
+ggplot(normalised_team_stat, aes(x = fitted, y = res))+
+geom_point(colour = "black")+
+geom_hline(yintercept = 0, colour = "black", linetype = "dashed")+
+theme(panel.background = element_rect(fill = 'red'))+
+geom_smooth(se = FALSE, colour = "white")
+```
+
+
+Yes, the data shows homoscedasticity evident from randomisation visible.
+
+**7. Normality**
+
+```{r}
+ggplot(data =NULL, aes(x= res))+
+geom_histogram( colour = "red", fill = "black", binwidth = 1.5)+
+theme(panel.background = element_rect(fill = 'red'))
+```
+
+Yes, the data points appear normally distributed. 
+
+**8. Multicollinearity**
+
+```{r}
+pairs(formula = ~ TRB_per_game  + AST_per_game  + STL_per_game  + BLK_per_game  + TOV_per_game, data = normalised_team_stat)
+car::vif(fit)
+sqrt(car::vif(fit))
+```
+
+The model does not show any multicollinearity and this is the required aspect. 
+
+### Model Testing & Player Metric
+
+**Applying the model**
 
 ```{r}
 normalised_team_stat <- mutate(normalised_team_stat,exp_PTS_per_game=predict(fit,newdata=normalised_team_stat))
@@ -250,13 +403,12 @@ geom_point(colour = "dodgerblue") +
 geom_text(nudge_x = 2, cex = 3)
 ```
 
-### Player Metric
+**Player Metric**
 
 At first we normalize the player_stat
 ```{r}
 normalised_player_stat <- player_stat %>% mutate(
   PTS_per_game = PTS / G,
-  FG_per_game = FG / G,
   TRB_per_game = TRB / G,
   AST_per_game = AST / G,
   STL_per_game = STL / G,
@@ -269,7 +421,7 @@ Next, step is to calculate player specific expected points.
 
 ```{r}
 fit <- lm(PTS_per_game ~
-  FG_per_game + TRB_per_game  + AST_per_game  + STL_per_game  + BLK_per_game  + TOV_per_game, data = normalised_player_stat)
+  TRB_per_game  + AST_per_game  + STL_per_game  + BLK_per_game  + TOV_per_game, data = normalised_player_stat)
 tidy(fit, conf.int = TRUE)
 
 normalised_player_stat <- normalised_player_stat%>% ungroup() %>% mutate(exp_PTS = predict(fit,newdata = normalised_player_stat))
@@ -286,11 +438,10 @@ geom_histogram(binwidth = 0.5, colour = "black", fill = "dodgerblue")
 
 ## 5. Player recommendations
 
-### Value for money player for Point Guard Position 
+### Value for money player for Point Guard Position  
 
-![D'Angelo Russell](img/pg.png)
 
-```{r}
+```{r echo=FALSE}
 player_PG <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "PG")%>%
 arrange(desc(exp_PTS), salary) %>%
 top_n(10)
@@ -298,20 +449,26 @@ player_PG
 ```
 
 
-```{r}
+```{r echo=FALSE}
 player_PG %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
 geom_point(colour = "dodgerblue") +
 geom_text(nudge_x = 2, cex = 3) +
 xlab("Salary (Millions)")
 ```
 
-We can see that D'Angelo Russell has exp_PTS of 22.8 at just 7.01 millions. So, he is our player for point guard position. 
+<center>
+![D'Angelo Russell](img/pg.png){width=400px}
+</center>
+
+Ben Simmons & Trae Young are two players best suited for point guard position. 
+We can see that Ben Simmons has exp_PTS of 24.0 at just 6.43 millions. So, he is our player for point guard position. More detail of players can be see at NBA website(5). We can consider Trae Young for bench strength. 
+
 
 ### Value for money player for Shooting Guard Position 
 
-![Devin Booker](img/sg.png)
 
-```{r}
+
+```{r echo=FALSE}
 player_SG <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "SG")%>%
 arrange(desc(exp_PTS), salary) %>%
 top_n(10)
@@ -319,21 +476,27 @@ player_SG
 ```
 
 
-```{r}
+```{r echo=FALSE}
 player_SG %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
 geom_point(colour = "dodgerblue") +
 geom_text(nudge_x = 2, cex = 3) +
 xlab("Salary (Millions)")
 ```
 
-We can see that Devin Booker has exp_PTS of 26.2 just at 3.31 millions. So, he is our player for shooting guard position.  
+<center>
+![Devin Booker](img/sg.png){width=400px}
+</center>
+
+Devin Booker & Luka Doncic are two players best suited for shooting guard position. 
+We can see that Devin Booker has exp_PTS of 25.5 just at 3.31 millions. So, he is our player for shooting guard position. We can put Luka Doncic for bench strength.   
  
 
 ### Value for money player for Small Forward Position
 
-![Brandon Ingram](img/sf.png)
 
-```{r}
+
+
+```{r echo=FALSE}
 player_SF <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "SF")%>%
 arrange(desc(exp_PTS), salary) %>%
 top_n(10)
@@ -341,20 +504,25 @@ player_SF
 ```
 
 
-```{r}
+```{r echo=FALSE}
 player_SF %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
 geom_point(colour = "dodgerblue") +
 geom_text(nudge_x = 2, cex = 3) +
 xlab("Salary (Millions)")
 ```
 
-We can see that Brandon Ingram has exp_PTS of 19.3 just at 5.75 millions. So, he is our player for small forward position.  
+<center>
+![Brandon Ingram](img/sf.png){width=400px}
+</center>
+
+Brandon Ingram & Justise Winslow are two players for small forward position. 
+We can see that Brandon Ingram has exp_PTS of 17.1 just at 5.75 millions. So, he is our player for small forward position. We can put Justise Winslow for bench strength. 
 
 ### Value for money player for Power Forward Position 
 
-![John Collins](img/pf.png)
 
-```{r}
+
+```{r echo=FALSE}
 player_PF <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "PF")%>%
 arrange(desc(exp_PTS), salary) %>%
 top_n(10)
@@ -362,20 +530,26 @@ player_PF
 ```
 
 
-```{r}
+```{r echo=FALSE}
 player_PF %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
 geom_point(colour = "dodgerblue") +
 geom_text(nudge_x = 2, cex = 3) +
 xlab("Salary (Millions)")
 ```
 
-We can see that John Collins has exp_PTS of 20.3 at just 2.29 millions. So, he is our player for power forward position.  
+<center>
+![John Collins](img/pf.png){width=400px}
+</center>
+
+Julius Randle & John Collins are two best players for power forward position. 
+We can see that Julius Randle has exp_PTS of 21 at just 8.64 millions. So, he is our player for power forward position. We can put John Collins for bench strenght. 
 
 ### Value for money player for Center Position 
 
-![Karl-Anthony Towns](img/c.png)
 
-```{r}
+
+
+```{r echo=FALSE}
 player_C <- normalised_player_stat %>% select(player_name, Pos, salary, exp_PTS) %>% filter(Pos == "C")%>%
 arrange(desc(exp_PTS), salary) %>%
 top_n(10)
@@ -383,18 +557,33 @@ player_C
 ```
 
 
-```{r}
+```{r echo=FALSE}
 player_C %>% ggplot(aes(x = salary/1000000, y = exp_PTS, label = player_name, color = Pos)) +
 geom_point(colour = "dodgerblue") +
 geom_text(nudge_x = 2, cex = 3) +
 xlab("Salary (Millions)")
 ```
 
-We can see that Karl-Anthony Towns has exp_PTS of 23.7 at just 7.83 millions. So, he is our player for center position.  
+<center>
+![Karl-Anthony Towns](img/c.png){width=400px}
+</center>
+
+Karl-Anthony Towns & DeMarcus Cousins, are two players suited for center position. 
+We can see that Karl-Anthony Towns has exp_PTS of 24.2 at just 7.83 millions. So, he is our player for center position. We can put DeMarcus Cousins for bench strength. 
+
+### Lets save the processed data
+
+```{r}
+write_csv(x = final_players, path = "data/processed/finalplayers.csv")
+write_csv(x = normalised_player_stat, path = "data/processed/playersstat.csv")
+write_csv(x = normalised_team_stat, path = "data/processed/teamstat.csv")
+
+```
+
 
 ## 6. Summary
 
-```{r}
+```{r echo=FALSE}
 final_players<-data.frame(POSITION=c('PG','SG','SF','PF','C',""),PLAYER=c('D’Angelo Russell','Devin Booker','Brandon Ingram','John Collins','Karl-Anthony Towns','TOTAL'),
              SALARYmillions=c(7.01,3.31,5.75,2.29,7.83,26.19))
 final_players
@@ -402,13 +591,15 @@ final_players
 
 We are able to find top 5 value for money players in just 26.19 millions. We are left with ample money to make remaining team. 
 
-## 7. Reference List
-1. https://www.espn.in/nba/
+## 7. Reference List 
 
-2. https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf
 
-3. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3661887/
+1. [Internet]. Rstudio.com. 2022 [cited 3 May 2022]. Available from: https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf
 
-4. https://www.researchgate.net/publication/233682287_Performance_indicators_that_distinguish_winning_and_losing_teams_in_basketball
+2. Chicago Bulls Basketball - Bulls News, Scores, Stats, Rumors & More | ESPN [Internet]. ESPN. 2022 [cited 3 May 2022]. Available from: https://www.espn.in/nba/team/_/name/chi/chicago-bulls
 
-5. https://www.nba.com/players
+3. García J, Ibáñez S, Martinez De Santos R, Leite N, Sampaio J. Identifying Basketball Performance Indicators in Regular Season and Playoff Games. Journal of Human Kinetics [Internet]. 2013 [cited 27 April 2022];36(1):161-168. Available from: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3661887/
+
+4. Csataljay G, O’Donoghue P, Hughes M, Dancs H. Performance indicators that distinguish winning and losing teams in basketball. International Journal of Performance Analysis in Sport [Internet]. 2009 [cited 1 May 2022];9(1):60-66. Available from: https://www.researchgate.net/publication/233682287_Performance_indicators_that_distinguish_winning_and_losing_teams_in_basketball
+
+5. NBA Players & Team Rosters | NBA.com [Internet]. Nba.com. 2022 [cited 3 May 2022]. Available from: https://www.nba.com/players
