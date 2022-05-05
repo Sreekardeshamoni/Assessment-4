@@ -28,8 +28,8 @@ Every team owner wish to have top players only. But, its also a business and we 
 The top 5 players are:
 
 ```{r echo=FALSE}
-final_players<-data.frame(POSITION=c('PG','SG','SF','PF','C',""),PLAYER=c('D’Angelo Russell','Devin Booker','Brandon Ingram','John Collins','Karl-Anthony Towns','TOTAL'),
-             SALARYmillions=c(7.01,3.31,5.75,2.29,7.83,26.19))
+final_players<-data.frame(POSITION=c('PG','SG','SF','PF','C',""),PLAYER=c('Ben Simmons','Devin Booker','Brandon Ingram','Julius Randle','Karl-Anthony Towns','TOTAL'),
+             SALARYmillions=c(6.43,3.31,5.75,8.64,7.83,31.96))
 final_players
 ```
 
@@ -584,8 +584,8 @@ write_csv(x = normalised_team_stat, path = "data/processed/teamstat.csv")
 ## 6. Summary
 
 ```{r echo=FALSE}
-final_players<-data.frame(POSITION=c('PG','SG','SF','PF','C',""),PLAYER=c('D’Angelo Russell','Devin Booker','Brandon Ingram','John Collins','Karl-Anthony Towns','TOTAL'),
-             SALARYmillions=c(7.01,3.31,5.75,2.29,7.83,26.19))
+final_players<-data.frame(POSITION=c('PG','SG','SF','PF','C',""),PLAYER=c('Ben Simmons','Devin Booker','Brandon Ingram','Julius Randle','Karl-Anthony Towns','TOTAL'),
+             SALARYmillions=c(6.43,3.31,5.75,8.64,7.83,31.96))
 final_players
 ```
 

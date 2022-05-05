@@ -188,12 +188,12 @@ a.sourceLine {
 <p>Every team owner wish to have top players only. But, its also a business and we need to “purchase!” only value for money players for maximum utilization of money. The report finds top 5 value for money players with the help of linear regression analysis performed with help of R packages(1).</p>
 <p>The top 5 players are:</p>
 <pre><code>##   POSITION             PLAYER SALARYmillions
-## 1       PG   D’Angelo Russell           7.01
+## 1       PG        Ben Simmons           6.43
 ## 2       SG       Devin Booker           3.31
 ## 3       SF     Brandon Ingram           5.75
-## 4       PF       John Collins           2.29
+## 4       PF      Julius Randle           8.64
 ## 5        C Karl-Anthony Towns           7.83
-## 6                       TOTAL          26.19</code></pre>
+## 6                       TOTAL          31.96</code></pre>
 <div id="a-description-of-scenario" class="section level3">
 <h3>a) Description of scenario</h3>
 <p>Chicago Bulls is a Basketball team which participates in the NBA (National Basketball Association) seasons(2). General manager of Chicago Bulls has approached me, i.e. the author of this project; to find 5 best players for 5 positions, one player for each position for the next NBA season 2019-20.</p>
@@ -911,7 +911,7 @@ a.sourceLine {
 <p><strong>3. Independence of observations</strong></p>
 <div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>car<span class="sc">::</span><span class="fu">durbinWatsonTest</span>(fit)</span></code></pre></div>
 <pre><code>##  lag Autocorrelation D-W Statistic p-value
-##    1     -0.09644946      2.179861   0.648
+##    1     -0.09644946      2.179861   0.644
 ##  Alternative hypothesis: rho != 0</code></pre>
 <p>The DW statistics value of 2 indicates that there is no correlation at all. We can see that in our model the value is almost 2. This indicates there is almost no correlation at all among the residuals and that we have independence of observations.</p>
 <p><strong>4. Linearity</strong></p>
@@ -1271,12 +1271,12 @@ a.sourceLine {
 <div id="summary" class="section level2">
 <h2>6. Summary</h2>
 <pre><code>##   POSITION             PLAYER SALARYmillions
-## 1       PG   D’Angelo Russell           7.01
+## 1       PG        Ben Simmons           6.43
 ## 2       SG       Devin Booker           3.31
 ## 3       SF     Brandon Ingram           5.75
-## 4       PF       John Collins           2.29
+## 4       PF      Julius Randle           8.64
 ## 5        C Karl-Anthony Towns           7.83
-## 6                       TOTAL          26.19</code></pre>
+## 6                       TOTAL          31.96</code></pre>
 <p>We are able to find top 5 value for money players in just 26.19 millions. We are left with ample money to make remaining team.</p>
 </div>
 <div id="reference-list" class="section level2">
